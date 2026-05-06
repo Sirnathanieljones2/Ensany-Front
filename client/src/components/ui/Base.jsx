@@ -1,5 +1,11 @@
 import React from 'react';
 
+/**
+ * Ensany Base UI Components
+ * Optimized for the "Private Desk" & "Chain of Custody" aesthetic.
+ * Uses a combination of Tailwind and Canonical Design tokens.
+ */
+
 export const Button = React.forwardRef(({ 
   className = "", 
   variant = "primary", 
@@ -9,26 +15,26 @@ export const Button = React.forwardRef(({
   children, 
   ...props 
 }, ref) => {
-  const baseStyles = "inline-flex items-center justify-center gap-2 rounded-md font-bold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
+  const baseStyles = "inline-flex items-center justify-center gap-2 font-semibold transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
-    primary: "bg-[#065f46] text-white hover:bg-[#064e3b] border border-[#065f46] shadow-sm focus:ring-[#065f46]",
-    secondary: "bg-white text-[#0a0a0a] border border-gray-200 hover:bg-gray-50 hover:border-gray-300 shadow-sm focus:ring-gray-200",
-    ghost: "bg-transparent text-gray-700 hover:bg-gray-50 border border-transparent focus:ring-gray-100",
-    danger: "bg-red-600 text-white hover:bg-red-700 border border-red-600 focus:ring-red-600",
+    primary: "bg-[var(--accent)] text-white hover:opacity-90 border border-[var(--accent)]",
+    secondary: "bg-white text-[var(--ink-main)] border border-[var(--border-subtle)] hover:bg-gray-50",
+    ghost: "bg-transparent text-[var(--ink-muted)] hover:text-[var(--ink-main)] hover:bg-[var(--bg-paper)]",
+    danger: "bg-red-50 text-red-700 border border-red-100 hover:bg-red-100",
   };
 
   const sizes = {
     sm: "min-h-[36px] px-3 text-sm",
-    md: "min-h-[42px] px-4 text-base",
-    lg: "min-h-[48px] px-6 text-lg",
+    md: "min-h-[44px] px-6 text-base",
+    lg: "min-h-[52px] px-8 text-lg",
   };
 
   return (
     <button
       ref={ref}
       disabled={disabled || isLoading}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} rounded-[var(--radius)] ${className}`}
       {...props}
     >
       {isLoading ? (
@@ -42,7 +48,10 @@ export const Button = React.forwardRef(({
 });
 
 export const Card = ({ className = "", children, ...props }) => (
-  <div className={`bg-white border border-gray-200 rounded-lg shadow-sm ${className}`} {...props}>
+  <div 
+    className={`bg-white border border-[var(--border-subtle)] rounded-[var(--radius)] ${className}`} 
+    {...props}
+  >
     {children}
   </div>
 );
@@ -51,17 +60,20 @@ export const Input = React.forwardRef(({ className = "", error, ...props }, ref)
   <div className="w-full space-y-1.5">
     <input
       ref={ref}
-      className={`w-full min-h-[44px] px-3 bg-white border rounded-md outline-none transition-all duration-200 
-        ${error ? 'border-red-500 focus:ring-red-500/10' : 'border-gray-200 focus:border-[#065f46] focus:ring-4 focus:ring-[#065f46]/10'} 
+      className={`w-full min-h-[44px] px-3 bg-white border border-[var(--border-subtle)] rounded-[var(--radius)] outline-none font-sans transition-all duration-200 
+        ${error ? 'border-red-500 focus:ring-red-500/10' : 'focus:border-[var(--ink-main)] focus:ring-4 focus:ring-black/5'} 
         ${className}`}
       {...props}
     />
-    {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+    {error && <p className="text-xs font-medium text-red-600 font-sans">{error}</p>}
   </div>
 ));
 
 export const Label = ({ className = "", children, ...props }) => (
-  <label className={`block text-sm font-bold text-gray-700 mb-1.5 ${className}`} {...props}>
+  <label 
+    className={`block text-xs font-bold uppercase tracking-wider text-[var(--ink-muted)] mb-1.5 font-sans ${className}`} 
+    {...props}
+  >
     {children}
   </label>
 );
@@ -69,13 +81,14 @@ export const Label = ({ className = "", children, ...props }) => (
 export const Badge = ({ children, variant = "neutral", className = "" }) => {
   const variants = {
     neutral: "bg-gray-100 text-gray-700",
-    success: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+    success: "bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent-line)]",
     warning: "bg-amber-50 text-amber-700 border border-amber-100",
     danger: "bg-red-50 text-red-700 border border-red-100",
+    review: "bg-amber-100 text-amber-900 border border-amber-200",
   };
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${variants[variant]} ${className}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-[var(--radius)] text-[10px] font-bold uppercase tracking-widest ${variants[variant]} ${className}`}>
       {children}
     </span>
   );

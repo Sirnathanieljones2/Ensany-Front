@@ -25,12 +25,6 @@ export function Header() {
     ["/blog", t.nav.blog],
     ["/pricing", t.nav.pricing],
   ];
-  
-  const appNav = [
-    ["/app/dashboard", t.nav.dashboard],
-    ...(auth?.user?.role === "ADMIN" ? [["/app/admin", t.nav.admin]] : []),
-    ["/blog", t.nav.blog],
-  ];
 
   function logout() {
     localStorage.removeItem("ensany_token");
@@ -43,54 +37,53 @@ export function Header() {
   if (isApp) return null;
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-gray-100 py-3 shadow-sm' : 'bg-transparent py-5'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-[var(--bg-paper)]/80 backdrop-blur-md border-b border-[var(--border-subtle)] py-4' : 'bg-transparent py-8'}`}>
       <div className="max-w-[1200px] mx-auto px-6 flex items-center justify-between">
-        <Link className="flex items-center gap-2 group" to="/">
-          <span className="w-9 h-9 flex items-center justify-center rounded-lg bg-[#065f46] text-white font-black text-sm shadow-lg shadow-[#065f46]/20 group-hover:scale-105 transition-transform">E</span>
-          <span className="font-bold text-[#0a0a0a] tracking-tight text-xl">Ensany</span>
+        <Link className="no-underline" to="/">
+          <span className="font-serif font-bold text-2xl text-[var(--accent)] tracking-tight">Ensany</span>
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-10">
           {publicNav.map(([href, label]) => (
             <NavLink 
               key={href} 
               to={href} 
-              className={({ isActive }) => `px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${isActive ? 'text-[#065f46] bg-[#ecfdf5]' : 'text-gray-500 hover:text-[#0a0a0a] hover:bg-gray-50'}`}
+              className={({ isActive }) => `text-sm font-medium transition-colors duration-200 no-underline ${isActive ? 'text-[var(--ink-main)] font-bold' : 'text-[var(--ink-muted)] hover:text-[var(--ink-main)]'}`}
             >
               {label}
             </NavLink>
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6">
           <button 
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 text-[10px] font-black tracking-widest uppercase text-gray-400 hover:border-gray-300 hover:text-gray-600 transition-all" 
+            className="flex items-center gap-2 px-3 py-1.5 border border-[var(--border-subtle)] bg-white text-[10px] font-mono font-bold tracking-widest uppercase text-[var(--ink-faint)] hover:text-[var(--ink-main)] hover:border-[var(--ink-main)] transition-all rounded-[var(--radius)]" 
             type="button" 
             onClick={() => setLang(lang === "en" ? "ar" : "en")}
           >
-            <Languages size={14} className="text-[#065f46]" />
+            <Languages size={14} className="text-[var(--accent)]" />
             {lang === "en" ? "العربية" : "English"}
           </button>
 
-          <div className="hidden md:flex items-center gap-3 ml-2 border-l border-gray-100 pl-5">
+          <div className="hidden md:flex items-center gap-6 ml-2">
             {auth ? (
-              <Button variant="ghost" size="sm" onClick={logout} className="text-gray-400">
+              <Button variant="ghost" size="sm" onClick={logout}>
                 <LogOut size={16} />
               </Button>
             ) : (
               <>
-                <Link to="/login" className="text-sm font-bold text-gray-500 hover:text-[#0a0a0a] transition-colors">
+                <Link to="/login" className="text-sm font-bold text-[var(--ink-muted)] hover:text-[var(--ink-main)] transition-colors no-underline">
                   {t.auth.login}
                 </Link>
-                <Button as={Link} to="/signup" size="sm" className="px-5">
+                <Button as={Link} to="/signup" size="sm" className="px-6">
                   {t.auth.create}
                 </Button>
               </>
             )}
           </div>
 
-          <button className="md:hidden p-2 text-gray-500" onClick={() => setOpen(!open)}>
+          <button className="md:hidden p-2 text-[var(--ink-muted)]" onClick={() => setOpen(!open)}>
             {open ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
@@ -98,21 +91,21 @@ export function Header() {
 
       {/* Mobile Nav */}
       {open && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-100 p-6 space-y-4 shadow-xl animate-in slide-in-from-top-4 duration-300">
-          <nav className="flex flex-col gap-2">
+        <div className="md:hidden absolute top-full left-0 right-0 bg-[var(--bg-paper)] border-b border-[var(--border-subtle)] p-8 space-y-6 shadow-xl animate-in slide-in-from-top-4 duration-300">
+          <nav className="flex flex-col gap-4">
             {publicNav.map(([href, label]) => (
               <Link 
                 key={href} 
                 to={href} 
-                className="flex items-center justify-between p-3 rounded-lg font-bold text-gray-600 active:bg-gray-50"
+                className="flex items-center justify-between font-serif text-xl text-[var(--ink-main)] no-underline"
                 onClick={() => setOpen(false)}
               >
                 {label}
-                <ChevronRight size={16} className="text-gray-300" />
+                <ChevronRight size={16} className="text-[var(--ink-faint)]" />
               </Link>
             ))}
           </nav>
-          <div className="pt-4 border-t border-gray-50 flex flex-col gap-3">
+          <div className="pt-6 border-t border-[var(--border-subtle)] flex flex-col gap-4">
             {auth ? (
               <Button onClick={logout} variant="secondary" className="w-full">
                 {t.auth.signOut}
