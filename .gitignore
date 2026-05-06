@@ -45,3 +45,4 @@ Thumbs.db
 
 # Local-only config
 *.local
+.vercel
