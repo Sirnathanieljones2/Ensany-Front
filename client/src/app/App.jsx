@@ -23,22 +23,25 @@ function AdminRoute({ children }) {
 }
 
 function Shell() {
+  const { lang } = useApp();
   return (
-    <div className="app-shell">
+    <div className="app-shell" dir={lang === "ar" ? "rtl" : "ltr"}>
       <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<EditorialPage type="about" />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/methodology" element={<EditorialPage type="about" />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/login" element={<AuthPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/app" element={<ProtectedRoute><AccountHome /></ProtectedRoute>} />
-        <Route path="/app/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/app/admin" element={<AdminRoute><AdminWorkspace /></AdminRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <main className="flex-1 flex flex-col w-full">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<EditorialPage type="about" />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/methodology" element={<EditorialPage type="about" />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/app" element={<ProtectedRoute><AccountHome /></ProtectedRoute>} />
+          <Route path="/app/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/app/admin" element={<AdminRoute><AdminWorkspace /></AdminRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
     </div>
   );
 }

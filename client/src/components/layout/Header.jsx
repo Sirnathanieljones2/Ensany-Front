@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Languages, Menu, X, LogOut, ChevronRight } from "lucide-react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../../context/AppContext.jsx";
@@ -7,17 +7,10 @@ import { Button } from "../ui/Base.jsx";
 export function Header() {
   const { auth, setAuth, lang, setLang, t } = useApp();
   const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   const isApp = location.pathname.startsWith('/app');
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const publicNav = [
     ["/", t.nav.home],
@@ -37,7 +30,7 @@ export function Header() {
   if (isApp) return null;
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? 'bg-[var(--bg-paper)]/80 backdrop-blur-md border-b border-[var(--border-subtle)] py-4' : 'bg-transparent py-8'}`}>
+    <header className="sticky top-0 left-0 right-0 z-[100] bg-[var(--bg-paper)]/95 backdrop-blur-md border-b border-[var(--border-subtle)] py-4">
       <div className="max-w-[1200px] mx-auto px-6 flex items-center justify-between">
         <Link className="no-underline" to="/">
           <span className="font-serif font-bold text-2xl text-[var(--accent)] tracking-tight">Ensany</span>

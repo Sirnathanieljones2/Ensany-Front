@@ -19,7 +19,7 @@ export function SiteFooter() {
           </div>
           
           <div className="space-y-4">
-            <h4 className="text-[10px] font-mono font-bold tracking-widest uppercase text-[var(--ink-faint)]">System</h4>
+            <h4 className="text-[10px] font-mono font-bold tracking-widest uppercase text-[var(--ink-faint)]">{t.sections.system}</h4>
             <ul className="space-y-2 list-none p-0">
               <li><Link to="/pricing" className="text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors no-underline uppercase tracking-tight">{t.nav.pricing}</Link></li>
               <li><Link to="/blog" className="text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors no-underline uppercase tracking-tight">{t.nav.blog}</Link></li>
@@ -27,21 +27,21 @@ export function SiteFooter() {
           </div>
 
           <div className="space-y-4">
-            <h4 className="text-[10px] font-mono font-bold tracking-widest uppercase text-[var(--ink-faint)]">Operations</h4>
+            <h4 className="text-[10px] font-mono font-bold tracking-widest uppercase text-[var(--ink-faint)]">{t.sections.operations}</h4>
             <ul className="space-y-2 list-none p-0">
               <li><Link to="/about" className="text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors no-underline uppercase tracking-tight">{t.nav.about}</Link></li>
-              <li><a href="mailto:support@ensany.com" className="text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors no-underline uppercase tracking-tight">Access Support</a></li>
+              <li><a href="mailto:support@ensany.com" className="text-xs font-bold text-[var(--ink-muted)] hover:text-[var(--accent)] transition-colors no-underline uppercase tracking-tight">{t.sections.support}</a></li>
             </ul>
           </div>
         </div>
 
         <div className="pt-10 border-t border-dashed border-[var(--border-subtle)] flex flex-col md:flex-row justify-between items-center gap-6 text-center">
           <p className="text-[9px] font-mono font-bold text-[var(--ink-faint)] uppercase tracking-[0.2em]">
-            &copy; {currentYear} Ensany Privacy Systems. Clinical Protection.
+            &copy; {currentYear} {t.sections.copyright}
           </p>
           <div className="flex gap-8">
-            <a href="#" className="text-[9px] font-mono font-bold text-[var(--ink-faint)] hover:text-[var(--accent)] uppercase tracking-widest no-underline transition-colors">Privacy_Protocol</a>
-            <a href="#" className="text-[9px] font-mono font-bold text-[var(--ink-faint)] hover:text-[var(--accent)] uppercase tracking-widest no-underline transition-colors">Terms_of_Mandate</a>
+            <a href="#" className="text-[9px] font-mono font-bold text-[var(--ink-faint)] hover:text-[var(--accent)] uppercase tracking-widest no-underline transition-colors">{t.sections.privacyProtocol}</a>
+            <a href="#" className="text-[9px] font-mono font-bold text-[var(--ink-faint)] hover:text-[var(--accent)] uppercase tracking-widest no-underline transition-colors">{t.sections.termsOfMandate}</a>
           </div>
         </div>
       </div>

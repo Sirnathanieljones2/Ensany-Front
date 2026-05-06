@@ -41,15 +41,15 @@ export function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-paper)] flex items-center justify-center p-6 lg:p-12 relative">
+    <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative bg-[var(--bg-paper)]">
       <div className="w-full max-w-[1000px] grid lg:grid-cols-[1fr,440px] gap-12 lg:gap-20 items-center">
         <div>
-          <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[var(--accent)] mb-4 block">Secure Access Desk</span>
+          <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[var(--accent)] mb-4 block">{t.auth.eyebrow}</span>
           <h1 className="text-5xl lg:text-6xl font-serif text-[var(--ink-main)] leading-[1.1] mb-8 tracking-tight">
-            Return to your privacy workspace.
+            {t.auth.title}
           </h1>
           <p className="text-lg text-[var(--ink-muted)] leading-relaxed max-w-lg mb-10">
-            Sign in to review removal progress, operator notes, broker activity, and the verified chain of custody.
+            {t.auth.text}
           </p>
 
           <div className="flex gap-8">
@@ -70,15 +70,15 @@ export function AuthPage() {
               <KeyRound size={24} />
             </div>
             <div>
-              <h2 className="text-2xl font-serif text-[var(--ink-main)]">Access</h2>
-              <p className="text-[10px] text-[var(--ink-faint)] font-mono uppercase tracking-widest">Protocol Required</p>
+              <h2 className="text-2xl font-serif text-[var(--ink-main)]">{t.auth.login}</h2>
+              <p className="text-[10px] text-[var(--ink-faint)] font-mono uppercase tracking-widest">{t.auth.protocolRequired}</p>
             </div>
           </div>
 
           <form className="space-y-6" onSubmit={submit}>
             <div className="space-y-4">
               <div>
-                <Label>Email Ident</Label>
+                <Label>{t.auth.emailLabel}</Label>
                 <Input 
                   autoComplete="email" 
                   placeholder={t.auth.email} 
@@ -88,7 +88,7 @@ export function AuthPage() {
                 />
               </div>
               <div>
-                <Label>Auth Password</Label>
+                <Label>{t.auth.passwordLabel}</Label>
                 <Input 
                   autoComplete="current-password" 
                   placeholder={t.auth.password} 
@@ -106,16 +106,16 @@ export function AuthPage() {
             )}
 
             <Button className="w-full" size="md" isLoading={loading}>
-              Establish Connection
+              {t.auth.submitLogin}
             </Button>
 
             <div className="text-center space-y-6 pt-6 border-t border-dashed border-[var(--border-subtle)]">
               <p className="text-xs text-[var(--ink-muted)]">
-                New to Ensany? <Link to="/signup" className="font-bold text-[var(--accent)] no-underline">Create Identity File</Link>
+                {t.auth.newUser} <Link to="/signup" className="font-bold text-[var(--accent)] no-underline">{t.auth.createIdentity}</Link>
               </p>
               <div className="flex justify-center">
                 <span className="text-[10px] text-[var(--ink-faint)] font-mono uppercase tracking-widest border border-[var(--border-subtle)] px-2 py-1">
-                  AES-256-GCM Secure
+                  {t.auth.secureNote}
                 </span>
               </div>
             </div>
