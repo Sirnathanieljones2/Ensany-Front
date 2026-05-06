@@ -44,10 +44,6 @@ export function AuthPage() {
     <div className="min-h-screen bg-[var(--bg-paper)] flex items-center justify-center p-6 lg:p-12 relative">
       <div className="w-full max-w-[1000px] grid lg:grid-cols-[1fr,440px] gap-12 lg:gap-20 items-center">
         <div>
-          <Link to="/" className="inline-flex items-center gap-2 mb-12 no-underline">
-            <span className="font-serif font-bold text-2xl text-[var(--accent)] tracking-tight">Ensany</span>
-          </Link>
-          
           <span className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-[var(--accent)] mb-4 block">Secure Access Desk</span>
           <h1 className="text-5xl lg:text-6xl font-serif text-[var(--ink-main)] leading-[1.1] mb-8 tracking-tight">
             Return to your privacy workspace.

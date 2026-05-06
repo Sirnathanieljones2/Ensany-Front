@@ -21,7 +21,7 @@ export function Header() {
 
   const publicNav = [
     ["/", t.nav.home],
-    ["/about", t.nav.about],
+    ["/methodology", t.nav.about],
     ["/blog", t.nav.blog],
     ["/pricing", t.nav.pricing],
   ];

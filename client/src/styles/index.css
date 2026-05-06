@@ -75,7 +75,7 @@
   grid-template-columns: auto minmax(280px, 1fr) auto;
   gap: 24px;
   align-items: center;
-  padding: 1.5rem max(24px, calc((100vw - 1200px) / 2));
+  padding: 1.25rem max(24px, calc((100vw - 1200px) / 2));
 }
 
 .brand {
@@ -91,7 +91,7 @@
 }
 
 .nav a {
-  @apply text-sm font-medium text-[var(--ink-muted)] transition-colors duration-200 no-underline;
+  @apply text-sm font-medium text-[var(--ink-muted)] transition-colors duration-200 no-underline rtl:font-serif;
 }
 
 .nav a:hover, .nav a.active {
@@ -111,11 +111,11 @@
 
 /* Hero Section Refactor */
 .hero-section {
-  @apply flex flex-col items-center justify-center text-center py-24 px-6 max-w-4xl mx-auto;
+  @apply flex flex-col items-center justify-center text-center py-20 md:py-32 px-6 max-w-4xl mx-auto;
 }
 
 .hero-section h1 {
-  @apply text-5xl md:text-7xl mb-8;
+  @apply text-5xl md:text-7xl mb-8 leading-[1.1] tracking-tight;
 }
 
 .hero-section p {

@@ -24,7 +24,7 @@ export function Home() {
           <Button as={Link} to="/signup" size="lg" className="px-10">
             {t.home.primary}
           </Button>
-          <Button as={Link} to="/about" variant="secondary" size="lg">
+          <Button as={Link} to="/methodology" variant="secondary" size="lg">
             {t.home.secondary}
           </Button>
         </div>
@@ -108,7 +108,7 @@ export function Home() {
           <h2 className="text-4xl lg:text-5xl font-serif text-white leading-tight mb-8">
             Your personal information is not public property.
           </h2>
-          <Button as={Link} to="/signup" size="lg" className="bg-white text-[var(--accent)] hover:bg-[var(--bg-paper)] border-white px-10">
+          <Button as={Link} to="/signup" size="lg" className="bg-white text-[var(--accent)] hover:bg-[var(--bg-paper)] border-transparent px-10">
             Start your removal
           </Button>
         </div>

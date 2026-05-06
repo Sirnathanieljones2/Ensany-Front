@@ -119,7 +119,7 @@ export const dictionaries = {
     nav: { 
       home: "آلية العمل", 
       about: "المنهجية", 
-      blog: "سجل العمليات", 
+      blog: "المدونة", 
       pricing: "البروتوكولات", 
       dashboard: "الموجز", 
       admin: "العمليات" 

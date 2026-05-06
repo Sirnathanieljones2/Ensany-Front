@@ -30,6 +30,7 @@ function Shell() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<EditorialPage type="about" />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/methodology" element={<EditorialPage type="about" />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/login" element={<AuthPage />} />
         <Route path="/signup" element={<SignupPage />} />
