@@ -1,0 +1,635 @@
+Ensany Project Documentation
+Last updated: 2026-04-28
+
+1. Product Vision
+
+Ensany is being built as a Middle East-focused competitor to privacy removal services such as Incogni and DeleteMe.
+
+The name "Ensany" means "forget me" in Arabic. The core product goal is to help users remove their personal information from data brokers, people-search databases, lead-generation companies, directories, and other entities that collect or expose personal data.
+
+The long-term vision is to provide:
+
+- User account creation and secure profile management.
+- Automated and semi-automated data removal requests.
+- Email-based removal workflows.
+- Form-based removal workflows.
+- Request tracking and proof of activity.
+- Dashboard visibility for users.
+- Internal operator tools for broker and request management.
+- Regional privacy expertise for the Middle East.
+- Educational privacy content through a blog and expert columns.
+
+2. Current Application Shape 
+
+The project is now a full-stack JavaScript application.
+
+Backend:
+- Node.js
+- Express
+- Prisma
+- PostgreSQL on Neon
+- JWT authentication
+- bcrypt password hashing
+- Zod validation
+- Resend email integration
+
+Frontend:
+- React
+- Vite
+- CSS
+- lucide-react icons
+
+Database:
+- PostgreSQL
+- Hosted on Neon
+- Managed with Prisma migrations
+
+3. Development Commands
+
+Install dependencies:
+
+npm install
+
+Start backend and frontend together:
+
+npm.cmd run dev
+
+Start only the API:
+
+npm.cmd run dev:api
+
+Start only the frontend:
+
+npm.cmd run dev:client
+
+Build the frontend:
+
+npm.cmd run build
+
+Generate Prisma Client:
+
+npm.cmd run prisma:generate
+
+Seed broker data:
+
+npm.cmd run prisma:seed
+
+Run the Resend webhook smoke test:
+
+npm.cmd run test:webhook
+
+Validate Prisma schema:
+
+npm.cmd exec prisma -- validate
+
+Apply migrations to Neon:
+
+npm.cmd exec prisma -- migrate deploy
+
+4. Environment Configuration
+
+The app now loads environment variables from .env first.
+
+The old env file name is still supported as a fallback, but .env is the preferred standard.
+
+.env is ignored by git and must never be committed.
+
+.env.example documents the expected variables:
+
+DATABASE_URL
+JWT_SECRET
+PORT
+CLIENT_ORIGIN
+APP_URL
+EMAIL_FROM
+RESEND_API_KEY
+RESEND_WEBHOOK_SECRET
+DISABLE_EMAIL_SEND
+
+Important development setting:
+
+DISABLE_EMAIL_SEND=true
+
+This prevents the app from sending real emails while testing.
+
+5. Neon Database and SSL
+
+The Neon connection string was updated from:
+
+sslmode=require
+
+to:
+
+sslmode=verify-full
+
+This follows the warning printed by the PostgreSQL driver. The warning explained that future pg versions may treat sslmode=require differently, so sslmode=verify-full preserves the stricter behavior.
+
+6. Security Improvements Implemented
+
+The backend now includes:
+
+- Helmet for safer HTTP headers.
+- CORS restricted to CLIENT_ORIGIN.
+- Express JSON body size limit.
+- Rate limiting.
+- Centralized error handling.
+- Zod input validation.
+- JWT authentication middleware.
+- bcrypt password hashing.
+- No plaintext password storage.
+- .env and env ignored by git.
+- Prisma instead of raw SQL, reducing SQL injection risk.
+
+Passwords are stored in the database as passwordHash values.
+
+User-facing API responses do not return password hashes.
+
+7. Authentication System
+
+Authentication files:
+
+- src/services/authService.js
+- src/routes/authRoutes.js
+- src/middleware/auth.js
+- src/schemas/authSchemas.js
+- src/middleware/validate.js
+
+Auth endpoints:
+
+POST /api/auth/register
+POST /api/auth/login
+GET /api/auth/me
+
+Registration creates:
+
+- User
+- Profile
+- bcrypt password hash
+- JWT token
+
+Login:
+
+- Finds user by normalized email.
+- Compares submitted password against passwordHash.
+- Returns a JWT token and public user object.
+
+JWT tokens are currently stored in browser localStorage by the frontend.
+
+This is acceptable for the prototype stage. For production, HTTP-only secure cookies or a stronger session strategy should be considered.
+
+8. Prisma Schema Improvements
+
+The old schema was simple and prototype-level.
+
+It had:
+
+- Integer ids
+- User password field
+- Basic Profile
+- Basic Broker
+- Basic RemovalRequest
+
+The schema now has:
+
+- UUID primary keys.
+- User roles.
+- Secure passwordHash field.
+- Richer Profile model.
+- Richer Broker model.
+- Removal request lifecycle statuses.
+- Broker removal methods.
+- Email event tracking.
+- Timestamps for key workflow stages.
+- Indexes for dashboard and scale.
+- Unique constraints to avoid duplicate requests and duplicate webhook events.
+
+Main models:
+
+User:
+- id
+- email
+- passwordHash
+- displayName
+- role
+- createdAt
+- updatedAt
+
+Profile:
+- id
+- userId
+- fullName
+- phone
+- address
+- city
+- country
+- birthYear
+- notes
+
+Broker:
+- id
+- name
+- legalName
+- email
+- privacyEmail
+- website
+- removalFormUrl
+- country
+- region
+- category
+- removalMethod
+- status
+
+RemovalRequest:
+- id
+- userId
+- brokerId
+- status
+- trackingToken
+- providerMessageId
+- subject
+- submittedAt
+- emailSentAt
+- formSubmittedAt
+- responseAt
+- completedAt
+- lastFollowupAt
+- nextFollowupAt
+- failureReason
+- notes
+
+EmailEvent:
+- id
+- removalRequestId
+- type
+- provider
+- providerEventId
+- metadata
+- occurredAt
+- createdAt
+
+9. Removal Request Workflow
+
+Core file:
+
+src/services/removalService.js
+
+When a user starts a removal run:
+
+1. The API checks that the user exists.
+2. The API checks that the user has a profile.
+3. Active brokers are loaded from the database.
+4. One RemovalRequest is created per user/broker pair.
+5. Duplicate requests are avoided using a unique userId + brokerId constraint.
+6. Email-capable brokers are processed through the email service.
+7. Form-only brokers are marked as FORM_REQUIRED.
+8. Email events are recorded.
+9. Dashboard data is updated through database state.
+
+Important statuses:
+
+- QUEUED
+- EMAIL_SENT
+- FORM_REQUIRED
+- FORM_SUBMITTED
+- IN_PROGRESS
+- COMPLETED
+- REJECTED
+- FAILED
+- NEEDS_USER_INFO
+
+10. Dashboard API
+
+Dashboard endpoint:
+
+GET /api/dashboard
+
+Removal request list endpoint:
+
+GET /api/removals
+
+Start removals endpoint:
+
+POST /api/removals/start
+
+The dashboard currently returns:
+
+- totalBrokers
+- totalRequests
+- sent
+- completed
+- failed
+- needsAction
+- byStatus
+- recentRequests
+
+11. Email System
+
+The email system was originally built with Nodemailer and Gmail.
+
+It has now been moved to Resend.
+
+Core file:
+
+src/email/emailService.js
+
+The service now:
+
+- Builds the removal email subject.
+- Builds plain text email content.
+- Builds HTML email content.
+- Adds a tracking pixel.
+- Sends email through Resend when enabled.
+- Adds Resend tags:
+  - category
+  - request_id
+  - broker_id
+- Adds custom headers:
+  - X-Ensany-Request-Id
+  - X-Ensany-User-Id
+
+If DISABLE_EMAIL_SEND=true, the email is not sent.
+
+This is the expected setting until a real sending domain is purchased and verified.
+
+12. Resend Integration
+
+Resend dependency has been installed.
+
+Nodemailer has been removed.
+
+New environment variables:
+
+RESEND_API_KEY
+RESEND_WEBHOOK_SECRET
+
+Important:
+
+Production Resend sending requires a verified domain.
+
+Without a domain, Ensany should keep:
+
+DISABLE_EMAIL_SEND=true
+
+Once a domain is purchased:
+
+1. Add the domain in Resend.
+2. Add the DNS records Resend provides.
+3. Wait for verification.
+4. Set EMAIL_FROM to a verified sender, such as:
+   Ensany <privacy@ensany.com>
+5. Deploy the API publicly.
+6. Add the webhook URL in Resend:
+   https://api.yourdomain.com/api/webhooks/resend
+7. Set RESEND_WEBHOOK_SECRET.
+8. Set DISABLE_EMAIL_SEND=false.
+
+13. Email Tracking
+
+Two tracking systems exist now.
+
+First: internal tracking pixel
+
+Endpoint:
+
+GET /api/tracking/email/open/:token.png
+
+This records an OPENED event when the tracking pixel is loaded.
+
+Second: Resend webhook tracking
+
+Endpoint:
+
+POST /api/webhooks/resend
+
+This receives signed Resend events.
+
+The webhook route is mounted before the JSON parser so it can verify the raw request body.
+
+Resend events currently mapped:
+
+- email.scheduled -> SCHEDULED
+- email.sent -> SENT
+- email.delivered -> DELIVERED
+- email.delivery_delayed -> DELIVERY_DELAYED
+- email.opened -> OPENED
+- email.clicked -> CLICKED
+- email.bounced -> BOUNCED
+- email.complained -> COMPLAINED
+- email.suppressed -> SUPPRESSED
+- email.received -> RECEIVED
+- email.failed -> FAILED
+
+Webhook retries are deduplicated using providerEventId.
+
+14. Frontend
+
+Frontend files:
+
+- client/index.html
+- client/src/main.jsx
+- client/src/styles.css
+- vite.config.js
+
+The frontend currently has:
+
+- Home page
+- About page
+- Blog page
+- Pricing page
+- Register/login panel
+- Logged-in account home
+- Dashboard page
+
+The dashboard can:
+
+- Load dashboard summary.
+- Load removal requests.
+- Start a removal run.
+- Show request status per broker.
+
+The visual direction is:
+
+- Dark green
+- Trust-focused
+- Premium
+- Privacy/security-oriented
+- Animated but not static-feeling
+
+The frontend currently uses local React state for navigation instead of a full router.
+
+React Router should be added later.
+
+15. Migrations Applied
+
+The following migrations exist:
+
+20260326060839_init
+
+Original prototype migration.
+
+20260428000000_core_privacy_schema
+
+Rebuilt the schema into the current core Ensany product model.
+
+This migration was destructive because the old schema used integer ids and the new schema uses UUIDs.
+
+20260428000100_resend_email_events
+
+Added more Resend-specific email event types and unique indexes for provider ids.
+
+This migration has been applied to Neon.
+
+16. Broker Seed Data
+
+Seed file:
+
+prisma/seed.js
+
+The seed currently inserts or updates sample brokers.
+
+Current examples include:
+
+- Whitepages
+- Spokeo
+- YallaCompare
+- Regional Data Directory
+
+This is not the final broker database.
+
+The broker database will become one of the most important product assets.
+
+17. Tests and Smoke Checks
+
+No full automated test suite exists yet.
+
+Current verification commands used:
+
+npm.cmd run build
+npm.cmd run prisma:generate
+npm.cmd exec prisma -- validate
+npm.cmd exec prisma -- migrate deploy
+npm.cmd run test:webhook
+
+Webhook smoke test:
+
+scripts/testResendWebhook.js
+
+This script:
+
+1. Finds a removal request.
+2. Temporarily assigns a fake Resend email id.
+3. Processes a fake email.delivered event.
+4. Processes the same event again.
+5. Confirms the duplicate event is ignored.
+6. Restores the request afterward.
+7. Deletes the test email event afterward.
+
+18. Current Limitations
+
+The app is not production-ready yet.
+
+Known gaps:
+
+- No production sending domain yet.
+- Resend cannot fully send branded emails until a domain is verified.
+- No admin dashboard yet.
+- No broker management UI yet.
+- No form automation yet.
+- No payment system yet.
+- No forgot-password flow.
+- No email verification flow.
+- No refresh token/session rotation.
+- No React Router.
+- No test suite.
+- No deployment setup.
+- No logging or monitoring.
+- No background job queue.
+- No scheduled follow-up worker.
+- No broker-specific playbooks.
+- No document upload or identity verification system.
+
+19. Security Notes
+
+Current security foundation is much better than the original prototype, but future production work should add:
+
+- Email verification.
+- Forgot/reset password.
+- HTTP-only cookie auth or refresh-token strategy.
+- Stronger rate limits for auth routes.
+- Audit logs.
+- Admin role enforcement.
+- Request ownership checks everywhere.
+- Production logging.
+- Error monitoring.
+- Secrets manager.
+- CSRF strategy if cookie auth is adopted.
+- Webhook replay protection window.
+- Background job isolation.
+
+20. Recommended Next Steps
+
+The next best step is to build the admin/operator layer.
+
+This should include:
+
+- Admin login/role protection.
+- Broker list.
+- Broker create/edit/delete.
+- Broker removal method management.
+- Request list across all users.
+- Request detail page.
+- Request status update actions.
+- Internal notes.
+- Manual follow-up scheduling.
+- Form-required workflow.
+
+Why this matters:
+
+Ensany is not only a user app. It is also an operations business.
+
+Users need the dashboard.
+
+The company needs an internal control room.
+
+After that:
+
+1. Add React Router.
+2. Build request detail pages.
+3. Add profile completion flow.
+4. Add broker management.
+5. Add email provider production setup after buying a domain.
+6. Add webhooks in Resend after deploying the API.
+7. Add scheduled follow-up jobs.
+8. Add payment/pricing integration.
+9. Add privacy blog CMS/content system.
+10. Add proper automated tests.
+
+21. Current Strategic Product Direction
+
+The short-term product should prove:
+
+- A user can create an account.
+- A user can provide personal details.
+- Ensany can identify relevant brokers.
+- Ensany can create removal requests.
+- Ensany can send/track emails.
+- Ensany can show progress to the user.
+- Ensany can support manual operator intervention for complex cases.
+
+The medium-term product should prove:
+
+- Broker workflows can be standardized.
+- Form workflows can be tracked.
+- Follow-ups can be automated.
+- Users trust the dashboard.
+- Operators can manage many users efficiently.
+
+The long-term product moat will come from:
+
+- Regional broker database.
+- Broker-specific removal playbooks.
+- Middle East privacy knowledge.
+- Automation plus human review.
+- Proof and tracking.
+- Strong brand trust.
+- Excellent user experience.

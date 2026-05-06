@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum BrokerStatus {
+  ACTIVE
+  PAUSED
+  RETIRED
+}
+
+enum RemovalMethod {
+  EMAIL
+  FORM
+  EMAIL_AND_FORM
+}
+
+enum BrokerRiskLevel {
+  UNKNOWN
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RemovalRequestStatus {
+  DRAFT
+  QUEUED
+  EMAIL_SENT
+  FORM_REQUIRED
+  FORM_SUBMITTED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+  FAILED
+  NEEDS_USER_INFO
+}
+
+enum EmailEventType {
+  QUEUED
+  SCHEDULED
+  SENT
+  DELIVERED
+  DELIVERY_DELAYED
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  SUPPRESSED
+  RECEIVED
+  REPLIED
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  role         UserRole @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile  Profile?
+  requests RemovalRequest[]
+  formSubmissions FormSubmission[] @relation("FormSubmissionOperator")
+  auditLogs AuditLog[] @relation("AuditLogActor")
+  authorizationConsents UserAuthorizationConsent[]
+
+  @@index([createdAt])
+}
+
+model Profile {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  fullName  String
+  phone     String?
+  address   String?
+  city      String?
+  country   String?
+  birthYear Int?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Broker {
+  id              String        @id @default(uuid()) @db.Uuid
+  name            String
+  legalName       String?
+  email           String?
+  privacyEmail    String?
+  website         String?
+  removalFormUrl  String?
+  escalationEmail String?
+  country         String
+  region          String?
+  category        String?
+  removalMethod   RemovalMethod @default(EMAIL)
+  expectedResponseDays Int?
+  removalInstructions  String?
+  requiredData    Json?
+  riskLevel       BrokerRiskLevel @default(UNKNOWN)
+  status          BrokerStatus  @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  requests RemovalRequest[]
+
+  @@unique([name, country])
+  @@index([country])
+  @@index([status])
+}
+
+model RemovalRequest {
+  id               String               @id @default(uuid()) @db.Uuid
+  userId           String               @db.Uuid
+  brokerId         String               @db.Uuid
+  status           RemovalRequestStatus @default(QUEUED)
+  trackingToken    String               @unique
+  providerMessageId String?               @unique
+  subject          String?
+  submittedAt      DateTime?
+  emailSentAt      DateTime?
+  formSubmittedAt  DateTime?
+  responseAt       DateTime?
+  completedAt      DateTime?
+  lastFollowupAt   DateTime?
+  nextFollowupAt   DateTime?
+  failureReason    String?
+  notes            String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  broker      Broker       @relation(fields: [brokerId], references: [id], onDelete: Restrict)
+  emailEvents EmailEvent[]
+  formSubmissions FormSubmission[]
+
+  @@unique([userId, brokerId])
+  @@index([userId, status])
+  @@index([brokerId, status])
+  @@index([nextFollowupAt])
+}
+
+model EmailEvent {
+  id               String         @id @default(uuid()) @db.Uuid
+  removalRequestId String         @db.Uuid
+  type             EmailEventType
+  provider         String?
+  providerEventId  String?         @unique
+  metadata         Json?
+  occurredAt       DateTime       @default(now())
+  createdAt        DateTime       @default(now())
+
+  removalRequest RemovalRequest @relation(fields: [removalRequestId], references: [id], onDelete: Cascade)
+
+  @@index([removalRequestId, occurredAt])
+  @@index([type])
+}
+
+model FormSubmission {
+  id               String   @id @default(uuid()) @db.Uuid
+  removalRequestId String   @db.Uuid
+  submittedById    String?  @db.Uuid
+  targetUrl        String?
+  confirmationCode String?
+  evidenceUrl      String?
+  notes            String?
+  submittedAt      DateTime @default(now())
+  nextFollowupAt   DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  removalRequest RemovalRequest @relation(fields: [removalRequestId], references: [id], onDelete: Cascade)
+  submittedBy    User?          @relation("FormSubmissionOperator", fields: [submittedById], references: [id], onDelete: SetNull)
+
+  @@index([removalRequestId, submittedAt])
+  @@index([submittedById])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorUserId String?  @db.Uuid
+  actorEmail  String?
+  action      String
+  targetType  String?
+  targetId    String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  requestId   String?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation("AuditLogActor", fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([action, createdAt])
+  @@index([targetType, targetId])
+  @@index([requestId])
+}
+
+model PendingSignup {
+  id                    String    @id @default(uuid()) @db.Uuid
+  email                 String    @unique
+  passwordHash          String
+  displayName           String
+  verificationCodeHash  String
+  verificationTokenHash String?   @unique
+  verifiedAt            DateTime?
+  consumedAt            DateTime?
+  expiresAt             DateTime
+  attemptCount          Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model UserAuthorizationConsent {
+  id                   String   @id @default(uuid()) @db.Uuid
+  userId               String   @db.Uuid
+  consentVersion       String
+  consentText          String
+  removalAuthorization Boolean
+  electronicSignature  String
+  ipAddress            String?
+  userAgent            String?
+  acceptedAt           DateTime @default(now())
+  createdAt            DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, acceptedAt])
+}

@@ -1,0 +1,668 @@
+Ensany Project Documentation Part 2
+Last updated: 2026-04-29
+
+This file continues from:
+
+docs/ensany-project-documentation.txt
+
+The first documentation file ended just before the admin/operator layer, broker playbook expansion, React Router migration, and frontend restructuring work. This second file records what was completed after that point.
+
+1. Admin and Operator Layer Added
+
+Ensany now has an internal operator/admin layer.
+
+This is important because the business is not only a user-facing app. It also needs an internal operations system so the team can manage brokers, review request progress, and intervene when a request needs manual handling.
+
+Backend admin route:
+
+src/routes/adminRoutes.js
+
+Admin service logic:
+
+src/services/adminService.js
+
+Admin validation schemas:
+
+src/schemas/adminSchemas.js
+
+Admin role middleware:
+
+src/middleware/auth.js
+
+The admin API is mounted behind:
+
+- requireAuth
+- requireAdmin
+
+This means only authenticated users with role ADMIN can access the internal admin endpoints.
+
+2. Admin API Endpoints
+
+The following admin endpoints now exist:
+
+GET /api/admin/overview
+
+Returns platform-wide operational summary data such as:
+
+- total users
+- total brokers
+- active brokers
+- total requests
+- requests grouped by status
+- due follow-ups
+
+GET /api/admin/brokers
+
+Returns broker records with filtering and counts.
+
+POST /api/admin/brokers
+
+Creates a broker record.
+
+PATCH /api/admin/brokers/:brokerId
+
+Updates a broker record.
+
+GET /api/admin/requests
+
+Returns removal requests across all users with related user, broker, and recent email event data.
+
+GET /api/admin/requests/:requestId
+
+Returns full request detail for operator review.
+
+PATCH /api/admin/requests/:requestId
+
+Allows an admin to update:
+
+- status
+- notes
+- failureReason
+- nextFollowupAt
+
+POST /api/admin/requests/:requestId/notes
+
+Appends an internal note to a request.
+
+3. Broker Playbooks and Schema Expansion
+
+The first documentation file noted that broker-specific playbooks did not exist yet. That is no longer true.
+
+The Broker model was expanded with fields that support a real operations workflow:
+
+- escalationEmail
+- expectedResponseDays
+- removalInstructions
+- requiredData
+- riskLevel
+
+These fields allow Ensany to store broker-specific operational knowledge, rather than only a basic contact record.
+
+This improves the product in two ways:
+
+First, users get a more consistent removal process.
+
+Second, the business begins building one of its future moats: a proprietary broker workflow database.
+
+Relevant migration:
+
+prisma/migrations/20260429000000_broker_playbooks/migration.sql
+
+Relevant schema:
+
+prisma/schema.prisma
+
+4. Admin Request Management Behavior
+
+The admin layer does more than read data. It can also drive workflow state.
+
+When an admin updates a request status, Ensany now records an operator-side EmailEvent entry with provider set to operator.
+
+This creates an auditable timeline showing that a human operator changed the request state.
+
+The update logic also sets timestamps automatically for major transitions:
+
+- EMAIL_SENT
+- FORM_SUBMITTED
+- COMPLETED
+- REJECTED
+
+This keeps dashboard and case history data consistent.
+
+Admin notes are appended with:
+
+- ISO timestamp
+- admin email
+- note content
+
+This gives internal notes a basic audit trail.
+
+5. Admin Utilities and Smoke Testing
+
+Two supporting scripts were added.
+
+Admin promotion script:
+
+scripts/promoteAdmin.js
+
+Usage:
+
+npm.cmd run admin:promote -- user@example.com
+
+This promotes an existing user to the ADMIN role.
+
+Admin smoke test script:
+
+scripts/testAdminApi.js
+
+Usage:
+
+npm.cmd run test:admin
+
+This script:
+
+1. Creates a temporary test user.
+2. Promotes that user to admin.
+3. Creates a temporary broker.
+4. Loads admin overview data.
+5. Loads broker and request lists.
+6. Updates a request through the admin service.
+7. Cleans up the test broker and temporary operator event.
+
+This is not a full automated test suite, but it is a valuable smoke check for the admin layer.
+
+6. Frontend Advanced Past the Original Prototype
+
+The first documentation file described a frontend that:
+
+- used local React state for navigation
+- did not yet have React Router
+- did not yet have an admin page
+
+That is no longer the case.
+
+The frontend now has:
+
+- React Router
+- protected routes
+- admin route protection
+- a user dashboard route
+- an admin workspace route
+- a cleaner front-end folder structure
+- English and Arabic language switching
+- RTL support for Arabic
+
+React Router dependency:
+
+react-router-dom
+
+App routing file:
+
+client/src/app/App.jsx
+
+Current frontend routes:
+
+- /
+- /about
+- /blog
+- /pricing
+- /login
+- /app
+- /app/dashboard
+- /app/admin
+
+Route protection now works as follows:
+
+- unauthenticated users are redirected to /login
+- non-admin users are blocked from /app/admin
+
+7. Frontend Structure Refactor
+
+The frontend is no longer concentrated in one oversized main.jsx file.
+
+It was refactored into a more scalable structure:
+
+client/src
+- app
+- components
+- context
+- data
+- lib
+- pages
+- styles
+- main.jsx
+
+Current structure:
+
+client/src/app/App.jsx
+client/src/context/AppContext.jsx
+client/src/data/i18n.js
+client/src/data/marketing.js
+client/src/lib/api.js
+client/src/pages/*
+client/src/components/admin/*
+client/src/components/layout/*
+client/src/components/marketing/*
+client/src/components/ui/*
+client/src/styles/index.css
+
+Why this matters:
+
+- easier onboarding
+- clearer ownership boundaries
+- easier reuse of UI pieces
+- easier growth into a larger product
+- less risk of the frontend turning into an unmaintainable prototype
+
+8. Current Frontend Pages and Interfaces
+
+Public pages:
+
+- Home
+- About
+- Blog
+- Pricing
+- Login/Register
+
+Authenticated user pages:
+
+- Account Home
+- Dashboard
+
+Admin pages:
+
+- Admin Workspace
+
+The Home page now includes:
+
+- hero section
+- trust strip
+- process section
+- dashboard showcase
+- feature grid
+- footer
+
+The Dashboard page now includes:
+
+- summary metrics
+- request table
+- start removal action
+
+The Admin Workspace now includes:
+
+- overview metrics
+- request list
+- case file panel
+- status update controls
+- note submission
+- broker list
+- broker creation form
+
+9. Language Switching and RTL Support
+
+The frontend now supports both English and Arabic copy through a shared app context.
+
+Relevant files:
+
+client/src/context/AppContext.jsx
+client/src/data/i18n.js
+
+What this currently does:
+
+- stores selected language in localStorage
+- sets document.documentElement.lang
+- sets document.documentElement.dir
+- switches copy between English and Arabic
+- enables RTL layout behavior for Arabic
+
+This is important for Ensany because bilingual trust and regional relevance are part of the product strategy, not just a cosmetic feature.
+
+10. Frontend Styling Direction
+
+The frontend styling was upgraded significantly beyond the earlier prototype.
+
+Relevant stylesheet:
+
+client/src/styles/index.css
+
+The current visual direction is:
+
+- trust-focused
+- animated but controlled
+- light premium surfaces
+- dark green as an accent color
+- stronger information hierarchy
+- mobile-responsive layouts
+- more polished admin and dashboard presentation
+
+The design is still an evolving product UI, but it is now much closer to a real application foundation than the original single-screen prototype.
+
+11. Verification Completed After These Changes
+
+The following checks have been run during this phase:
+
+- npm.cmd run build
+- route checks against the Vite frontend
+- route checks against the API health endpoint
+- admin smoke testing
+
+The frontend build passed after:
+
+- React Router was added
+- the app was split into folders
+- the admin page was introduced
+
+12. What Improved Strategically
+
+After the work covered in the first documentation file, Ensany improved in four major ways.
+
+First: it gained an internal operating system.
+
+This means the company can now manage brokers and requests in a more deliberate way.
+
+Second: it gained broker playbooks.
+
+This moves the product closer to a defensible workflow database rather than a thin email-sending layer.
+
+Third: it gained a real frontend application structure.
+
+This makes further UI work much easier.
+
+Fourth: it gained better regional product alignment.
+
+Arabic/English switching and RTL support move the product closer to its Middle East identity.
+
+13. Current Limitations After This Phase
+
+Even with these improvements, the product is still not ready to launch publicly as a finished business.
+
+Key remaining gaps:
+
+- no verified sending domain yet
+- no live Resend production sending
+- no public webhook deployment
+- no broker edit UI yet
+- no broker delete/archive UI yet
+- no full form automation system
+- no payment and subscription system
+- no forgot-password flow
+- no refresh token or secure cookie auth strategy
+- no background job queue
+- no scheduled follow-up worker
+- no external monitoring service yet
+- no full automated test suite
+- no deployment pipeline
+
+14. Recommended Next Steps
+
+The best next steps now are:
+
+1. Finish the profile and intake flow.
+Users should be guided through collecting all personal details needed for broker removals before starting a run.
+
+2. Build broker management beyond create/list.
+Add broker edit, status management, richer filters, and eventually archive/retire workflows in the admin UI.
+
+3. Build form-required workflows properly.
+Some brokers require a web form instead of email. Ensany needs a first-class operator flow for these cases.
+
+4. Set up the real email delivery path once the domain is ready.
+That means verifying the sending domain in Resend, wiring the production webhook, and turning off DISABLE_EMAIL_SEND.
+
+5. Add a scheduled follow-up worker.
+Ensany needs automated follow-up logic for requests that do not receive timely responses.
+
+6. Strengthen authentication for production.
+Add password reset and move toward HTTP-only cookies or a stronger session strategy.
+
+7. Connect external monitoring and alerting.
+The platform now has structured logs, readiness checks, and audit logs. The next production step is sending those signals to a hosted monitoring stack with alerts.
+
+8. Add automated tests.
+Priority should go to auth, removals, admin APIs, webhook processing, and critical dashboard flows.
+
+9. Continue frontend refinement.
+The structure is now healthier, but the visual system, content depth, and trust cues still need more product-level polish.
+
+10. Prepare deployment architecture.
+Document hosting, environment management, worker processes, webhook URLs, and operational runbooks.
+
+15. Business Meaning of This Phase
+
+This phase turned Ensany from a privacy prototype into the beginning of an actual privacy operations platform.
+
+Before this phase, the system could create users, store data, and send or track some requests.
+
+After this phase, the system can now:
+
+- support internal operator workflows
+- manage brokers with richer metadata
+- expose an admin control room
+- show users a routed dashboard experience
+- support bilingual product presentation
+- scale frontend development more cleanly
+
+That is a meaningful step toward making Ensany a real business instead of only a technical experiment.
+
+16. Implementation Update: Profile Intake and Broker Management
+
+After the next-step list above was written, the first two items were started and implemented in the product.
+
+Profile and intake flow:
+
+- Added a PATCH /api/auth/profile endpoint.
+- Added profile update validation.
+- Added profile upsert logic.
+- Added dashboard intake UI.
+- Added required intake fields before starting removals.
+- Added frontend missing-field guidance.
+- Added local auth state refresh after profile save.
+
+Required fields before a removal run now include:
+
+- fullName
+- phone
+- address
+- city
+- country
+
+Broker management:
+
+- Added richer broker filters in the admin UI.
+- Added filtering by search, country, status, removal method, and risk level.
+- Added broker edit UI.
+- Added broker status management for ACTIVE, PAUSED, and RETIRED.
+- Added broker playbook editing from the admin interface.
+- Hardened broker PATCH behavior so partial updates do not accidentally clear optional broker data.
+
+These changes move Ensany closer to an operational product because users are now guided into cleaner removal data, and operators can maintain broker workflows without directly editing the database.
+
+17. Implementation Update: Form-Required Workflows
+
+The third roadmap item has now been implemented.
+
+Ensany now has a first-class form submission workflow for brokers that require web forms instead of, or in addition to, email.
+
+Database changes:
+
+- Added FormSubmission model.
+- Added prisma/migrations/20260429000100_form_submissions/migration.sql.
+- Linked FormSubmission to RemovalRequest.
+- Linked FormSubmission to the admin/operator user who recorded it.
+
+FormSubmission stores:
+
+- removalRequestId
+- submittedById
+- targetUrl
+- confirmationCode
+- evidenceUrl
+- notes
+- submittedAt
+- nextFollowupAt
+
+Backend changes:
+
+- Added POST /api/admin/requests/:requestId/form-submissions.
+- Added createFormSubmission service logic.
+- Form submissions automatically move the request to FORM_SUBMITTED.
+- formSubmittedAt and submittedAt are recorded.
+- nextFollowupAt can be scheduled from the same workflow.
+- An operator EmailEvent is created with action form_submission.
+- Admin request details now include form submission history.
+
+Frontend admin changes:
+
+- Added a FormWorkflow component inside the case file.
+- Operators can open the broker form URL.
+- Operators can record the form URL used.
+- Operators can record a confirmation code or receipt.
+- Operators can record an evidence URL.
+- Operators can add submission notes.
+- Operators can schedule the next follow-up.
+- Operators can see previous form submission history.
+
+Verification:
+
+- Prisma schema validation passed.
+- Prisma Client was regenerated.
+- The new migration was applied to Neon.
+- Frontend build passed.
+- Admin smoke test now verifies the form submission workflow.
+
+This makes FORM_REQUIRED and FORM_SUBMITTED real operational states rather than simple labels.
+
+18. Implementation Update: Logging, Monitoring, and Audit Coverage
+
+The seventh roadmap item has now been started and implemented at the platform level.
+
+Logging:
+
+- Added structured JSON logging.
+- Added request IDs for API requests.
+- Added X-Request-Id response headers.
+- Added request completion logs with method, path, status code, duration, actor user ID when available, IP address, and user agent.
+- Added structured error logging through the global Express error handler.
+- Added process-level logging for unhandled rejections and uncaught exceptions.
+- Added LOG_LEVEL support through environment configuration.
+
+Relevant files:
+
+src/utils/logger.js
+src/middleware/requestLogger.js
+server.js
+.env.example
+
+Monitoring:
+
+- Expanded GET /health to return status, uptime, and timestamp.
+- Added GET /ready to verify the API can reach the database.
+- Health and readiness checks are excluded from global rate limiting.
+- These endpoints are intended for deployment monitors, uptime checks, and future platform health alerts.
+
+Audit coverage:
+
+- Added an AuditLog model.
+- Added prisma/migrations/20260429000200_audit_logs/migration.sql.
+- Added src/services/auditService.js.
+- Added admin audit-log listing through GET /api/admin/audit-logs.
+- Added an Audit tab in the admin workspace.
+
+AuditLog stores:
+
+- actorUserId
+- actorEmail
+- action
+- targetType
+- targetId
+- metadata
+- ipAddress
+- userAgent
+- requestId
+- createdAt
+
+The following actions are now audited:
+
+- USER_REGISTERED
+- SIGNUP_VERIFICATION_STARTED
+- SIGNUP_EMAIL_VERIFIED
+- LOGIN_SUCCEEDED
+- LOGIN_FAILED
+- REMOVAL_AUTHORIZATION_ACCEPTED
+- PROFILE_UPDATED
+- REMOVAL_RUN_STARTED
+- LEGACY_REMOVAL_RUN_STARTED
+- BROKER_CREATED
+- BROKER_UPDATED
+- REMOVAL_REQUEST_UPDATED
+- REMOVAL_REQUEST_NOTE_ADDED
+- FORM_SUBMISSION_RECORDED
+- RESEND_WEBHOOK_PROCESSED
+- RESEND_WEBHOOK_IGNORED
+
+Verification:
+
+- Prisma schema validation passed.
+- Frontend production build passed.
+- The audit-log migration was applied to Neon.
+- Admin smoke testing now creates and reads an audit event.
+- The authenticated admin audit endpoint was tested through the running Express API.
+
+This gives Ensany a much stronger operational foundation before real users or operators rely on the platform. It also creates a trail for sensitive business actions without logging request bodies or raw personal profile data into general application logs.
+
+19. Implementation Update: Verified Multi-Step Signup Flow
+
+The signup flow has been redesigned so profile intake is no longer a loose form inside the dashboard.
+
+The new user onboarding order is:
+
+1. User enters account basics.
+2. Ensany sends an email verification code.
+3. User verifies the email code.
+4. User authorizes Ensany to request data removals on their behalf.
+5. User enters the personal details required for broker removals.
+6. Ensany creates the actual user account and workspace.
+
+Backend changes:
+
+- Added PendingSignup model.
+- Added UserAuthorizationConsent model.
+- Added prisma/migrations/20260429000300_signup_flow/migration.sql.
+- Added POST /api/auth/signup/start.
+- Added POST /api/auth/signup/verify.
+- Added POST /api/auth/signup/complete.
+- Deprecated the old one-step POST /api/auth/register route so it cannot bypass verification and consent.
+
+Security and business behavior:
+
+- Passwords are hashed while the signup is pending.
+- Verification codes expire.
+- Verification attempts are limited.
+- Final account creation requires a verified signup token.
+- Consent is stored with version, consent text, electronic signature, IP address, user agent, and timestamp.
+- The account is only created after verification, authorization, and intake are complete.
+- Non-production development can show the verification code for local testing, but production does not expose it.
+
+Frontend changes:
+
+- Added /signup route.
+- Home page start action now goes to /signup.
+- Login and signup are still available from the same auth surface, but signup is now a guided flow.
+- The signup UI includes account, verification, authorization, and removal profile steps.
+- The dashboard no longer throws the full profile form at the user after account creation.
+- The dashboard now shows a compact profile readiness card instead.
+
+Audit coverage added:
+
+- SIGNUP_VERIFICATION_STARTED
+- SIGNUP_EMAIL_VERIFIED
+- REMOVAL_AUTHORIZATION_ACCEPTED
+
+Verification:
+
+- Prisma schema validation passed.
+- The signup-flow migration was applied to Neon.
+- Prisma Client was regenerated.
+- Frontend production build passed.
+- Admin smoke test passed.
+- A direct signup smoke test verified pending signup creation, code verification, consent storage, final user creation, and pending signup consumption.
